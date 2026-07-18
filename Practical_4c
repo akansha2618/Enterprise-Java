@@ -1,0 +1,120 @@
+Index.jsp
+<html><head><title>Home</title></head>
+<body>
+<h2>User Registration and Login</h2>
+<a href="register.jsp">Register</a><br>
+<a href="login.jsp">Login</a>
+</body>
+</html>
+login.jsp
+<html><head><title>Login</title></head>
+<body>
+<h2>User Login</h2>
+<form action="loginProcess.jsp" method="post">
+Username: <input type="text" name="username" required><br>
+Password: <input type="password" name="password" required><br>
+<input type="submit" value="Login">
+</form>
+</body>
+</html>
+loginprocess.jsp
+<%@ page import="java.sql.*" %>
+<%
+String username = request.getParameter("username");
+String password = request.getParameter("password");
+Connection con = null;
+PreparedStatement ps = null;
+ResultSet rs = null;
+try {
+Class.forName("com.mysql.jdbc.Driver");
+con = DriverManager.getConnection("jdbc:mysql://localhost:3306/user", "root", "root");
+ps = con.prepareStatement("SELECT * FROM users WHERE username=? AND password=?");
+ps.setString(1, username);
+ps.setString(2, password);
+rs = ps.executeQuery();
+if (rs.next()) {
+session.setAttribute("user", username);
+response.sendRedirect("welcome.jsp");
+
+} else {
+out.println("Invalid Username or Password");
+}
+} catch (Exception e) {
+out.println(e);
+} finally {
+if (rs != null) {
+rs.close();
+}
+if (ps != null) {
+ps.close();
+}
+if (con != null) {
+con.close();
+}
+}
+%>
+register.jsp
+<html><head><title>Register</title></head>
+<body>
+<h2>User Registration</h2>
+<form action="registerProcess.jsp" method="post">
+Username: <input type="text" name="username" required><br>
+Password: <input type="password" name="password" required><br>
+<input type="submit" value="Register">
+</form>
+</body>
+</html>
+<%
+session.invalidate();
+response.sendRedirect("login.jsp");
+%>
+<%@ page import="java.sql.*" %>
+<%
+String username = request.getParameter("username");
+String password = request.getParameter("password");
+Connection con = null;
+PreparedStatement ps = null;
+try {
+Class.forName("com.mysql.jdbc.Driver");
+con = DriverManager.getConnection(
+"jdbc:mysql://localhost:3306/user",
+"root",
+"root");
+ps = con.prepareStatement(
+"INSERT INTO users(username,password) VALUES(?,?)");
+ps.setString(1, username);
+ps.setString(2, password);
+int i = ps.executeUpdate();
+if (i > 0) {
+out.println("Registration Successful!<br><a href='login.jsp'>Login Here</a>");
+} else {
+out.println("Registration Failed");
+}
+
+} catch (Exception e) {
+out.println(e);
+} finally {
+if (ps != null) {
+ps.close();
+}
+if (con != null) {
+con.close();
+}
+}
+%>
+<%
+String user = (String) session.getAttribute("user");
+if (user == null) {
+response.sendRedirect("login.jsp");
+}
+%>
+welcome.jsp
+<html>
+<head>
+<title>Welcome</title>
+</head>
+<body>
+<h2>Welcome <%= user%></h2>
+<a href="logout.jsp">Logout</a>
+</body>
+</html>
